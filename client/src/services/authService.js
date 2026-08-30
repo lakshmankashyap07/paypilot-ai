@@ -13,7 +13,7 @@ export const authService = {
    * Login user with credentials
    */
   async login(credentials) {
-    const response = await api.post('/api/auth/login', credentials);
+    const response = await api.post('/auth/login', credentials);
     return response;
   },
 
@@ -26,7 +26,7 @@ export const authService = {
   },
 
   /**
-   * Fetch current user profile
+   Fetch current user profile
    */
   async getCurrentUser() {
     const response = await api.get('/auth/me');
