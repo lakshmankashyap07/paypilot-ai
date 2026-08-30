@@ -1,0 +1,15 @@
+{
+  "name": "paypilot-ai",
+  "version": "1.0.0",
+  "description": "PayPilot AI — Agentic Commerce & Checkout Platform for Razorpay AI Builder Internship 2026",
+  "private": true,
+  "scripts": {
+    "client": "npm run dev --prefix client",
+    "server": "npm run dev --prefix server",
+    "seed": "npm run seed --prefix server",
+    "dev": "concurrently -n \"SERVER,CLIENT\" -c \"cyan,magenta\" \"npm run server\" \"npm run client\""
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
