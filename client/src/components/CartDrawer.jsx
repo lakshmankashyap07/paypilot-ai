@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useCart } from '../hooks/useCart';
 import { X, ShoppingBag, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
 
+import { getImageUrl } from '../utils/imageUtils';
+
 export const CartDrawer = () => {
   const { cart, cartCount, isDrawerOpen, closeDrawer, updateQuantity, removeFromCart } = useCart();
 
@@ -71,7 +73,7 @@ export const CartDrawer = () => {
                   className="p-3.5 rounded-2xl bg-slate-900/60 border border-slate-800 flex gap-3.5 items-center justify-between"
                 >
                   <img
-                    src={product.thumbnail || product.images?.[0]}
+                    src={getImageUrl(product.thumbnail || product.images?.[0] || product.imageUrl || product.image)}
                     alt={product.name}
                     className="w-16 h-16 rounded-xl object-cover bg-slate-950 border border-slate-800 flex-shrink-0"
                   />

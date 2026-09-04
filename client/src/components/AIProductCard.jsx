@@ -5,6 +5,7 @@ import { useToast } from '../context/ToastContext';
 import { Star, ShoppingBag, Eye, Check } from 'lucide-react';
 
 import { getImageUrl } from '../utils/imageUtils';
+import { WishlistButton } from './WishlistButton';
 
 export const AIProductCard = ({ product }) => {
   const { addToCart } = useCart();
@@ -74,12 +75,12 @@ export const AIProductCard = ({ product }) => {
         )}
       </div>
 
-      {/* Details */}
-      <div className="space-y-0.5">
+      {/* Details & AI Rationale */}
+      <div className="space-y-1">
         <div className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">{brand || 'PayPilot'}</div>
         <h4 className="font-bold text-gray-900 text-xs line-clamp-1">{name}</h4>
 
-        <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center justify-between pt-0.5">
           <div className="flex items-center gap-1">
             <span className="text-xs font-black text-gray-900">{formatCurrency(price)}</span>
             {originalPrice > price && (
@@ -95,17 +96,30 @@ export const AIProductCard = ({ product }) => {
             </div>
           )}
         </div>
+
+        {/* Why Recommended AI Rationale */}
+        {product.whyRecommended && (
+          <div className="pt-1 text-[10px] text-emerald-800 font-semibold bg-emerald-50 p-1.5 rounded-md border border-emerald-100 leading-snug">
+            {product.whyRecommended}
+          </div>
+        )}
       </div>
 
-      {/* Buttons */}
+      {/* Action Buttons: View, Wishlist, Add to Cart */}
       <div className="flex items-center gap-1.5 pt-1.5 border-t border-gray-100">
         <Link
           to={`/product/${productId}`}
-          className="flex-1 px-2 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-[11px] font-bold rounded-lg flex items-center justify-center gap-1 transition-colors"
+          className="px-2 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 text-[11px] font-bold rounded-lg flex items-center justify-center gap-1 transition-colors"
         >
           <Eye className="w-3 h-3 text-[#2874F0]" />
           <span>View</span>
         </Link>
+
+        <WishlistButton
+          productId={productId}
+          className="p-1.5 bg-gray-100 text-gray-600 hover:text-rose-600 border border-gray-200 rounded-lg"
+          iconSize="w-3.5 h-3.5"
+        />
 
         <button
           onClick={handleAddToCart}

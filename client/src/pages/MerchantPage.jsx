@@ -7,6 +7,7 @@ import { MerchantProductTable } from '../components/MerchantProductTable';
 import { MerchantOrderTable } from '../components/MerchantOrderTable';
 import { MerchantProductFormModal } from '../components/MerchantProductFormModal';
 import { MerchantAnalyticsTab } from '../components/MerchantAnalyticsTab';
+import { MerchantCopilotWidget } from '../components/MerchantCopilotWidget';
 import { InventoryStatusBadge } from '../components/InventoryStatusBadge';
 import {
   LayoutDashboard,
@@ -267,6 +268,9 @@ export const MerchantPage = ({ defaultTab = 'dashboard' }) => {
               color="amber"
             />
           </div>
+
+          {/* AI MERCHANT COPILOT WIDGET */}
+          <MerchantCopilotWidget />
 
           {/* Low Stock Inventory Risk Alert */}
           {stats?.inventory?.lowStockProducts?.length > 0 && (

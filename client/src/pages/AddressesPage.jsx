@@ -40,12 +40,12 @@ export const AddressesPage = () => {
             <Link to="/profile" className="text-slate-400 hover:text-teal-400">
               <ArrowLeft className="w-4 h-4" />
             </Link>
-            <h1 className="text-2xl font-extrabold text-white flex items-center gap-2.5">
+            <h1 className="text-2xl font-extrabold text-black flex items-center gap-2.5">
               <MapPin className="w-6 h-6 text-indigo-400" />
               Saved Shipping Addresses
             </h1>
           </div>
-          <p className="text-xs sm:text-sm text-slate-400 pl-6">
+          <p className="text-xs sm:text-sm text-black pl-6">
             Manage your saved delivery addresses for fast agentic checkout
           </p>
         </div>

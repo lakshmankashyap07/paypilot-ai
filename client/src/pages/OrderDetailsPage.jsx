@@ -5,6 +5,10 @@ import { useCart } from '../hooks/useCart';
 import { useToast } from '../context/ToastContext';
 import { OrderStatusBadge } from '../components/OrderStatusBadge';
 import { OrderTimeline } from '../components/OrderTimeline';
+import { PostPurchaseAgentModal } from '../components/PostPurchaseAgentModal';
+import { AIReturnAssistantModal } from '../components/AIReturnAssistantModal';
+import { RiskSignalsBadge } from '../components/RiskSignalsBadge';
+import { getReturnEligibility } from '../utils/orderHelpers';
 import {
   ArrowLeft,
   Package,
@@ -19,7 +23,10 @@ import {
   ShieldCheck,
   AlertCircle,
   RefreshCw,
-  X
+  X,
+  Bot,
+  RotateCcw,
+  Clock
 } from 'lucide-react';
 
 export const OrderDetailsPage = () => {
@@ -33,6 +40,9 @@ export const OrderDetailsPage = () => {
   const [isError, setIsError] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const [showPostPurchaseModal, setShowPostPurchaseModal] = useState(false);
+  const [showReturnModal, setShowReturnModal] = useState(false);
+  const [selectedReturnProductId, setSelectedReturnProductId] = useState('');
   const [copied, setCopied] = useState(false);
 
   const fetchOrderDetails = () => {
@@ -170,6 +180,8 @@ export const OrderDetailsPage = () => {
     day: 'numeric'
   });
 
+  const returnEligibility = getReturnEligibility(order);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 text-xs text-[#212121]">
       
@@ -198,11 +210,40 @@ export const OrderDetailsPage = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 self-start sm:self-auto">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 self-start sm:self-auto">
+          <button
+            onClick={() => setShowPostPurchaseModal(true)}
+            className="px-3.5 py-2 bg-[#2874F0] hover:bg-blue-700 text-white font-extrabold rounded-xl text-xs flex items-center gap-1.5 shadow-2xs cursor-pointer transition-all"
+          >
+            <Bot className="w-4 h-4 text-amber-300" />
+            <span>AI Order Assistant</span>
+          </button>
+
+          {returnEligibility.isEligible ? (
+            <button
+              onClick={() => {
+                setSelectedReturnProductId(items[0]?.product || items[0]?.productName);
+                setShowReturnModal(true);
+              }}
+              className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-[#D32F2F] border border-rose-200 font-extrabold rounded-xl text-xs flex items-center gap-1.5 cursor-pointer transition-all shadow-2xs"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Return / Replacement</span>
+            </button>
+          ) : (
+            <div className="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-600 font-bold rounded-xl text-[11px] flex items-center gap-1.5">
+              <RotateCcw className="w-3.5 h-3.5 text-gray-400" />
+              <span>{returnEligibility.statusMessage}</span>
+            </div>
+          )}
+
           <OrderStatusBadge status={orderStatus} />
           <OrderStatusBadge status={paymentStatus} type="payment" />
         </div>
       </div>
+
+      {/* AI FRAUD RISK SIGNALS FOR ORDER */}
+      <RiskSignalsBadge orderId={order._id} />
 
       {/* 2. ORDER STATUS TIMELINE */}
       <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm space-y-3">
@@ -448,6 +489,23 @@ export const OrderDetailsPage = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* POST PURCHASE AGENT MODAL */}
+      {showPostPurchaseModal && (
+        <PostPurchaseAgentModal
+          orderId={order._id}
+          onClose={() => setShowPostPurchaseModal(false)}
+        />
+      )}
+
+      {/* AI RETURN ASSISTANT MODAL */}
+      {showReturnModal && (
+        <AIReturnAssistantModal
+          orderId={order._id}
+          productId={selectedReturnProductId}
+          onClose={() => setShowReturnModal(false)}
+        />
       )}
 
     </div>

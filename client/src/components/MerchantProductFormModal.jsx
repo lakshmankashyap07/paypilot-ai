@@ -1,7 +1,8 @@
 import React, { useState, useRef } from 'react';
-import { X, Save, Loader2, Package, Tag, DollarSign, Image as ImageIcon, FileText, Upload, RefreshCw, Trash2, Link as LinkIcon } from 'lucide-react';
+import { X, Save, Loader2, Package, Tag, DollarSign, Image as ImageIcon, FileText, Upload, RefreshCw, Trash2, Link as LinkIcon, Sparkles, Bot } from 'lucide-react';
 import { useToast } from '../context/ToastContext';
 import uploadService from '../services/uploadService';
+import agenticCommerceService from '../services/agenticCommerceService';
 
 const CATEGORIES = [
   'Electronics',
@@ -41,6 +42,34 @@ export const MerchantProductFormModal = ({ initialProduct = null, onSubmit, onCl
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+
+  const handleGenerateAI = async () => {
+    if (!name.trim() || !brand.trim() || !category) {
+      showToast('Please enter Product Name, Brand, and Category first', 'error');
+      return;
+    }
+
+    try {
+      setIsGeneratingAI(true);
+      const res = await agenticCommerceService.generateProductListing({
+        name: name.trim(),
+        brand: brand.trim(),
+        category,
+        subcategory: subcategory.trim()
+      });
+
+      if (res && res.description) {
+        setDescription(res.description);
+        if (!name.includes('|') && res.seoTitle) setName(res.seoTitle);
+        showToast('Generated professional product listing with AI!', 'success');
+      }
+    } catch (err) {
+      showToast(err.message || 'AI listing generation failed', 'error');
+    } finally {
+      setIsGeneratingAI(false);
+    }
+  };
 
   // File Picker Selection & Validation
   const handleFileSelect = (e) => {
@@ -418,9 +447,26 @@ export const MerchantProductFormModal = ({ initialProduct = null, onSubmit, onCl
 
           {/* SECTION 4: DESCRIPTION */}
           <div className="space-y-3">
-            <div className="flex items-center gap-1.5 text-xs font-black text-[#172337] uppercase tracking-wider pb-1 border-b border-gray-100">
-              <FileText className="w-3.5 h-3.5 text-purple-600" />
-              <span>Description & Specifications</span>
+            <div className="flex items-center justify-between pb-1 border-b border-gray-100">
+              <div className="flex items-center gap-1.5 text-xs font-black text-[#172337] uppercase tracking-wider">
+                <FileText className="w-3.5 h-3.5 text-purple-600" />
+                <span>Description & Specifications</span>
+              </div>
+              <button
+                type="button"
+                onClick={handleGenerateAI}
+                disabled={isGeneratingAI}
+                className="px-3 py-1 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-extrabold rounded-lg text-[11px] flex items-center gap-1 shadow-2xs cursor-pointer transition-all disabled:opacity-50"
+              >
+                {isGeneratingAI ? (
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3 text-amber-300" />
+                    <span>Generate with AI</span>
+                  </>
+                )}
+              </button>
             </div>
 
             <div>

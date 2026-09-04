@@ -20,6 +20,8 @@ import growthCopilotRoutes from './routes/growthCopilotRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import personalizationRoutes from './routes/personalizationRoutes.js';
 import aiRoutes from './routes/aiRoutes.js';
+import aiIntelligenceRoutes from './routes/aiIntelligenceRoutes.js';
+import agenticCommerceRoutes from './routes/agenticCommerceRoutes.js';
 import paymentRoutes from './routes/paymentRoutes.js';
 import uploadRoutes from './routes/uploadRoutes.js';
 import { notFoundHandler, errorHandler } from './middleware/errorMiddleware.js';
@@ -109,6 +111,8 @@ app.use('/api/merchant/ai', growthCopilotRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/personalization', personalizationRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/ai-intelligence', aiIntelligenceRoutes);
+app.use('/api/agentic', agenticCommerceRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/upload', uploadRoutes);
 

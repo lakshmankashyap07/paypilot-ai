@@ -10,6 +10,10 @@ import { ProductCard } from '../components/ProductCard';
 import { ReviewForm } from '../components/ReviewForm';
 import { WishlistButton } from '../components/WishlistButton';
 import { getImageUrl } from '../utils/imageUtils';
+import { useCompare } from '../context/CompareContext';
+import { PriceIntelligenceCard } from '../components/PriceIntelligenceCard';
+import { SmartBundleBuilderCard } from '../components/SmartBundleBuilderCard';
+import { SmartProductComparisonModal } from '../components/SmartProductComparisonModal';
 import {
   Star,
   ShoppingBag,
@@ -26,7 +30,8 @@ import {
   Plus,
   Minus,
   AlertTriangle,
-  Tag
+  Tag,
+  Scale
 } from 'lucide-react';
 
 export const ProductDetailsPage = () => {
@@ -36,6 +41,7 @@ export const ProductDetailsPage = () => {
   const { reviews, addReview, editReview, removeReview } = useReviews(product?._id);
   const { user, isAuthenticated } = useAuth();
   const { addToCart } = useCart();
+  const { addToCompare, removeFromCompare, isInCompare } = useCompare();
   const { showToast } = useToast();
 
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
@@ -250,7 +256,24 @@ export const ProductDetailsPage = () => {
               </span>
             </div>
 
-            <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 leading-snug">{name}</h1>
+            <div className="flex items-center justify-between gap-4">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 leading-snug">{name}</h1>
+              <button
+                type="button"
+                onClick={() => {
+                  if (isInCompare(_id)) removeFromCompare(_id);
+                  else addToCompare(product);
+                }}
+                className={`px-3 py-1.5 rounded-xl border text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer flex-shrink-0 ${
+                  isInCompare(_id)
+                    ? 'bg-blue-50 border-[#2874F0] text-[#2874F0]'
+                    : 'bg-gray-50 hover:bg-gray-100 border-gray-200 text-gray-700'
+                }`}
+              >
+                <Scale className="w-3.5 h-3.5" />
+                <span>{isInCompare(_id) ? 'Added to Compare' : 'Compare Product'}</span>
+              </button>
+            </div>
 
             {/* Rating badge */}
             <div className="flex items-center gap-2 pt-1">
@@ -348,6 +371,12 @@ export const ProductDetailsPage = () => {
               </button>
             </div>
           </div>
+
+          {/* Price Intelligence Card */}
+          <PriceIntelligenceCard productId={_id} />
+
+          {/* Smart Companion Bundle Builder */}
+          <SmartBundleBuilderCard productId={_id} />
 
           {/* Delivery & Warranty Info */}
           <div className="grid grid-cols-3 gap-2 pt-3 border-t border-gray-100 text-[11px] text-gray-600 text-center">

@@ -12,6 +12,9 @@ import {
 } from 'lucide-react';
 
 import { getImageUrl } from '../utils/imageUtils';
+import { AIBudgetGuardBanner } from '../components/AIBudgetGuardBanner';
+import { AIBudgetGuardCard } from '../components/AIBudgetGuardCard';
+import { SmartBundleBuilderCard } from '../components/SmartBundleBuilderCard';
 
 export const CartPage = () => {
   const navigate = useNavigate();
@@ -89,11 +92,15 @@ export const CartPage = () => {
           </Link>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-          
-          {/* Cart Items List */}
-          <div className="lg:col-span-2 space-y-4">
-            <div className="bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-100">
+        <div className="space-y-6">
+          {/* AI BUDGET GUARD BANNER */}
+          <AIBudgetGuardBanner />
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+            
+            {/* Cart Items List */}
+            <div className="lg:col-span-2 space-y-4">
+              <div className="bg-white rounded-2xl border border-gray-200 shadow-sm divide-y divide-gray-100">
               {items.map((item) => {
                 const product = item.product;
                 if (!product) return null;
@@ -173,11 +180,21 @@ export const CartPage = () => {
                   </div>
                 );
               })}
-            </div>
-          </div>
+              </div>
 
-          {/* Cart Summary Side Column */}
-          <div className="lg:col-span-1 sticky top-24">
+              {/* SMART BUNDLE RECOMMENDATION IN CART */}
+              {items[0]?.product?._id && (
+                <SmartBundleBuilderCard productId={items[0].product._id} />
+              )}
+            </div>
+
+          {/* Cart Summary & AI Budget Guard Side Column */}
+          <div className="lg:col-span-1 space-y-4 sticky top-24">
+            <AIBudgetGuardCard
+              onApplyCoupon={(code) => {
+                if (cart?.applyCoupon) cart.applyCoupon(code);
+              }}
+            />
             <CartSummary
               subtotal={cart.subtotal}
               discount={cart.discount}
@@ -189,6 +206,7 @@ export const CartPage = () => {
               onCheckout={handleCheckoutClick}
               checkoutButtonText="PROCEED TO CHECKOUT"
             />
+          </div>
           </div>
         </div>
       )}

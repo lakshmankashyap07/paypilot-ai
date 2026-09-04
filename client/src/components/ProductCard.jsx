@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Star, ShoppingBag, Eye, CheckCircle2, XCircle, Zap } from 'lucide-react';
+import { Star, ShoppingBag, Eye, CheckCircle2, XCircle, Zap, Scale } from 'lucide-react';
 import { WishlistButton } from './WishlistButton';
 import { useCart } from '../hooks/useCart';
+import { useCompare } from '../context/CompareContext';
 
 import { getImageUrl } from '../utils/imageUtils';
 
@@ -11,6 +12,7 @@ export const ProductCard = ({ product }) => {
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
   const { addToCart } = useCart();
+  const { addToCompare, removeFromCompare, isInCompare } = useCompare();
   const navigate = useNavigate();
 
   if (!product) return null;
@@ -32,6 +34,8 @@ export const ProductCard = ({ product }) => {
     image,
     featured
   } = product;
+
+  const inCompare = isInCompare(_id);
 
   const formattedPrice = new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -96,24 +100,42 @@ export const ProductCard = ({ product }) => {
           />
         </Link>
 
-        {/* Top Badges */}
-        <div className="absolute top-2 left-2 flex flex-col gap-1 z-10">
-          {discount > 0 && (
-            <span className="px-2 py-0.5 text-[10px] font-extrabold bg-[#388E3C] text-white rounded shadow-sm">
+        {/* Top Badges & Wishlist / Compare */}
+        <div className="absolute top-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none">
+          {discount > 0 ? (
+            <span className="px-2 py-0.5 rounded text-[10px] font-black bg-[#D32F2F] text-white uppercase tracking-wider shadow-sm pointer-events-auto">
               {discount}% OFF
             </span>
+          ) : (
+            <span />
           )}
-          {featured && (
-            <span className="px-2 py-0.5 text-[9px] font-bold bg-[#FFCA28] text-[#212121] rounded shadow-sm">
-              FEATURED
-            </span>
-          )}
+
+          <div className="flex items-center gap-1 pointer-events-auto">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (inCompare) removeFromCompare(_id);
+                else addToCompare(product);
+              }}
+              title={inCompare ? 'Remove from compare' : 'Add to compare'}
+              className={`p-1.5 rounded-full border shadow-2xs transition-all cursor-pointer ${
+                inCompare
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white/90 text-gray-600 hover:text-[#2874F0] border-gray-200 hover:bg-white'
+              }`}
+            >
+              <Scale className="w-3.5 h-3.5" />
+            </button>
+
+            <WishlistButton
+              productId={_id}
+              className="p-1.5 rounded-full bg-white/90 text-gray-600 hover:text-rose-600 border border-gray-200 shadow-2xs hover:bg-white"
+            />
+          </div>
         </div>
 
-        {/* Wishlist Button */}
-        <div className="absolute top-2 right-2 z-10">
-          <WishlistButton productId={_id} className="p-1.5 bg-white/90 rounded-full shadow-sm hover:bg-white text-gray-600 hover:text-rose-500" iconSize="w-4 h-4" />
-        </div>
       </div>
 
       {/* Content */}

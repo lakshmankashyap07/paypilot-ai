@@ -6,9 +6,18 @@ const ALLOWED_TRANSITIONS = {
   PENDING: ['CONFIRMED', 'CANCELLED'],
   CONFIRMED: ['PROCESSING', 'CANCELLED'],
   PROCESSING: ['SHIPPED', 'CANCELLED'],
-  SHIPPED: ['OUT_FOR_DELIVERY'],
+  SHIPPED: ['OUT_FOR_DELIVERY', 'DELIVERED'],
   OUT_FOR_DELIVERY: ['DELIVERED'],
-  DELIVERED: [],
+  DELIVERED: ['RETURN_REQUESTED', 'REPLACEMENT_REQUESTED'],
+  RETURN_REQUESTED: ['RETURN_APPROVED', 'RETURN_REJECTED'],
+  RETURN_APPROVED: ['RETURN_PICKUP_SCHEDULED', 'RETURNED'],
+  RETURN_PICKUP_SCHEDULED: ['RETURNED'],
+  RETURN_REJECTED: [],
+  RETURNED: [],
+  REPLACEMENT_REQUESTED: ['REPLACEMENT_APPROVED', 'REPLACEMENT_REJECTED'],
+  REPLACEMENT_APPROVED: ['SHIPPED', 'REPLACED'],
+  REPLACEMENT_REJECTED: [],
+  REPLACED: [],
   CANCELLED: []
 };
 
@@ -127,6 +136,10 @@ export const MerchantOrderTable = ({
             <option value="PROCESSING">Processing</option>
             <option value="SHIPPED">Shipped</option>
             <option value="DELIVERED">Delivered</option>
+            <option value="RETURN_REQUESTED">Return Requested</option>
+            <option value="RETURNED">Returned</option>
+            <option value="REPLACEMENT_REQUESTED">Replacement Requested</option>
+            <option value="REPLACED">Replaced</option>
             <option value="CANCELLED">Cancelled</option>
           </select>
         </div>

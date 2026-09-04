@@ -9,6 +9,8 @@ import {
   XCircle
 } from 'lucide-react';
 
+import { RotateCcw, RefreshCw, AlertCircle } from 'lucide-react';
+
 export const OrderTimeline = ({ orderStatus }) => {
   if (orderStatus === 'CANCELLED') {
     return (
@@ -18,6 +20,62 @@ export const OrderTimeline = ({ orderStatus }) => {
         <p className="text-xs text-gray-600">
           This order was cancelled and product inventory has been restored.
         </p>
+      </div>
+    );
+  }
+
+  // Return & Replacement Special Status Banners
+  if (orderStatus?.startsWith('RETURN') || orderStatus?.startsWith('REPLACEMENT')) {
+    const isReturn = orderStatus.startsWith('RETURN');
+    const title = isReturn ? 'Return Lifecycle Progress' : 'Replacement Lifecycle Progress';
+    const Icon = isReturn ? RotateCcw : RefreshCw;
+
+    const returnSteps = [
+      { key: 'REQUESTED', label: isReturn ? 'Return Requested' : 'Replacement Requested' },
+      { key: 'APPROVED', label: isReturn ? 'Return Approved' : 'Approved' },
+      { key: 'FULFILLED', label: isReturn ? 'Item Returned' : 'Replaced' }
+    ];
+
+    let stepIndex = 0;
+    if (orderStatus.includes('APPROVED') || orderStatus.includes('SCHEDULED')) stepIndex = 1;
+    if (orderStatus === 'RETURNED' || orderStatus === 'REPLACED') stepIndex = 2;
+    if (orderStatus.includes('REJECTED')) stepIndex = -1;
+
+    return (
+      <div className="p-5 rounded-xl bg-gradient-to-r from-rose-50 via-purple-50 to-indigo-50 border border-purple-200 space-y-3 text-xs text-[#212121]">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold">
+              <Icon className="w-4 h-4" />
+            </div>
+            <div>
+              <h4 className="font-black text-gray-900 text-sm">{title}</h4>
+              <p className="text-[11px] text-gray-600">Current Status: <strong className="text-purple-700">{orderStatus.replace(/_/g, ' ')}</strong></p>
+            </div>
+          </div>
+          <span className="px-2.5 py-1 text-[10px] font-black bg-purple-600 text-white rounded-full">
+            BUYER PROTECTION
+          </span>
+        </div>
+
+        {/* Step Progress */}
+        <div className="grid grid-cols-3 gap-2 pt-1">
+          {returnSteps.map((st, idx) => {
+            const isDone = idx <= stepIndex;
+            return (
+              <div
+                key={st.key}
+                className={`p-2.5 rounded-lg border text-center font-bold text-[11px] transition-all ${
+                  isDone
+                    ? 'bg-purple-600 text-white border-purple-700 shadow-2xs'
+                    : 'bg-white border-gray-200 text-gray-400'
+                }`}
+              >
+                {st.label}
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   }

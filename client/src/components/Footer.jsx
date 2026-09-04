@@ -30,10 +30,7 @@ export const Footer = () => {
             </p>
 
             <div className="pt-1">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-extrabold bg-blue-900/40 text-blue-200 border border-white/10">
-                <Zap className="w-3 h-3 text-[#FFCA28]" />
-                <span>Razorpay AI Builder 2026</span>
-              </span>
+             
             </div>
           </div>
 
@@ -89,19 +86,19 @@ export const Footer = () => {
             <h4 className="text-[11px] font-bold text-white uppercase tracking-wider">POLICY</h4>
             <ul className="space-y-1.5 text-[11px]">
               <li>
-                <span className="hover:text-white cursor-pointer transition-colors">Privacy Policy</span>
+                <Link to="/privacy-policy" className="hover:text-white transition-colors">Privacy Policy</Link>
               </li>
               <li>
-                <span className="hover:text-white cursor-pointer transition-colors">Terms of Service</span>
+                <Link to="/terms-of-service" className="hover:text-white transition-colors">Terms of Service</Link>
               </li>
               <li>
-                <span className="hover:text-white cursor-pointer transition-colors">Refund Policy</span>
+                <Link to="/refund-policy" className="hover:text-white transition-colors">Refund Policy</Link>
               </li>
               <li>
-                <span className="hover:text-white cursor-pointer transition-colors">Shipping Policy</span>
+                <Link to="/shipping-policy" className="hover:text-white transition-colors">Shipping Policy</Link>
               </li>
               <li>
-                <span className="hover:text-white cursor-pointer transition-colors">Cancellation Policy</span>
+                <Link to="/cancellation-policy" className="hover:text-white transition-colors">Cancellation Policy</Link>
               </li>
             </ul>
           </div>

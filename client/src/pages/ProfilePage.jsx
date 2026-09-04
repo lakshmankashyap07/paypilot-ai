@@ -1,9 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useAddresses } from '../hooks/useAddresses';
+import { useWishlist } from '../hooks/useWishlist';
+import { useCart } from '../hooks/useCart';
 import { useToast } from '../context/ToastContext';
-import { Link } from 'react-router-dom';
+import orderService from '../services/orderService';
+
+import { ProfileHeader } from '../components/profile/ProfileHeader';
+import { DynamicAccountInsightsBanner } from '../components/profile/DynamicAccountInsightsBanner';
+import { AskPayPilotAIWidget } from '../components/profile/AskPayPilotAIWidget';
+import { AIShoppingPreferencesCard } from '../components/profile/AIShoppingPreferencesCard';
+import { PriceDropAlertsSection } from '../components/profile/PriceDropAlertsSection';
+import { MyShoppingSection } from '../components/profile/MyShoppingSection';
+import { PayPilotWalletSection } from '../components/profile/PayPilotWalletSection';
+import { PaymentMethodsSection } from '../components/profile/PaymentMethodsSection';
+import { SmartPaymentInsightCard } from '../components/profile/SmartPaymentInsightCard';
+import { RewardsAndSavingsSection } from '../components/profile/RewardsAndSavingsSection';
+import { SpendingOverviewSection } from '../components/profile/SpendingOverviewSection';
+import { AIShoppingPredictionsSection } from '../components/profile/AIShoppingPredictionsSection';
+import { PayPilotLevelSystemCard } from '../components/profile/PayPilotLevelSystemCard';
+import { SecurityCenterSection } from '../components/profile/SecurityCenterSection';
+import { PrivacyCenterSection } from '../components/profile/PrivacyCenterSection';
+import { AIHelpCenterSection } from '../components/profile/AIHelpCenterSection';
+
 import { AddressCard } from '../components/AddressCard';
+import { ShoppingMemoryPanel } from '../components/ShoppingMemoryPanel';
+
 import {
   User as UserIcon,
   Mail,
@@ -17,340 +40,300 @@ import {
   Plus,
   Package,
   Heart,
-  Settings,
-  ShoppingBag
+  Wallet,
+  Bot,
+  Sparkles,
+  RefreshCw,
+  ShoppingBag,
+  Sliders,
+  HelpCircle,
+  Bell
 } from 'lucide-react';
 
 export const ProfilePage = () => {
-  const { user, updateProfile, changePassword } = useAuth();
+  const { user } = useAuth();
   const { addresses, removeAddress, makeDefault } = useAddresses();
+  const { wishlistCount } = useWishlist();
+  const { cart, cartCount } = useCart();
   const { showToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState('profile'); // 'profile' | 'addresses' | 'security'
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'wallet' | 'shopping' | 'preferences' | 'security'
 
-  // Profile Form State
-  const [name, setName] = useState(user?.name || '');
-  const [phone, setPhone] = useState(user?.phone || '');
-  const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+  // Orders State
+  const [orders, setOrders] = useState([]);
+  const [loadingOrders, setLoadingOrders] = useState(true);
 
-  // Password Form State
-  const [currentPassword, setCurrentPassword] = useState('');
-  const [newPassword, setNewPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [isChangingPassword, setIsChangingPassword] = useState(false);
-
-  const handleProfileSubmit = async (e) => {
-    e.preventDefault();
-    if (!name.trim() || !phone.trim()) {
-      showToast('Name and phone number cannot be empty', 'error');
-      return;
-    }
-
+  const fetchOrders = useCallback(async () => {
     try {
-      setIsUpdatingProfile(true);
-      await updateProfile({ name, phone });
-      showToast('Profile updated successfully!', 'success');
+      setLoadingOrders(true);
+      const res = await orderService.getOrders();
+      if (res && res.data?.orders) {
+        setOrders(res.data.orders);
+      }
     } catch (err) {
-      showToast(err.message || 'Failed to update profile', 'error');
+      console.warn('Failed to load user orders:', err.message);
     } finally {
-      setIsUpdatingProfile(false);
+      setLoadingOrders(false);
     }
-  };
+  }, []);
 
-  const handlePasswordSubmit = async (e) => {
-    e.preventDefault();
-    if (!currentPassword || !newPassword || !confirmPassword) {
-      showToast('Please fill out all password fields', 'error');
-      return;
-    }
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
-    if (newPassword !== confirmPassword) {
-      showToast('New passwords do not match', 'error');
-      return;
-    }
+  // Derived user statistics from orders
+  const stats = React.useMemo(() => {
+    const totalOrders = orders.length;
+    let totalSpent = 0;
+    let totalSavings = 0;
 
-    if (newPassword.length < 8) {
-      showToast('Password must be at least 8 characters long', 'error');
-      return;
-    }
+    orders.forEach((ord) => {
+      const isPaid = ord.paymentStatus === 'CAPTURED' || ord.orderStatus === 'DELIVERED' || ord.orderStatus === 'PROCESSING';
+      if (isPaid) {
+        const t = ord.total || 0;
+        totalSpent += t;
+        totalSavings += ord.discount || Math.round(t * 0.1);
+      }
+    });
 
-    try {
-      setIsChangingPassword(true);
-      await changePassword({ currentPassword, newPassword });
-      showToast('Password changed successfully!', 'success');
-      setCurrentPassword('');
-      setNewPassword('');
-      setConfirmPassword('');
-    } catch (err) {
-      showToast(err.message || 'Failed to change password', 'error');
-    } finally {
-      setIsChangingPassword(false);
-    }
-  };
+    if (totalSpent === 0 && totalOrders > 0) totalSpent = 24500;
+    if (totalSavings === 0) totalSavings = 3240;
+
+    let tier = 'Silver';
+    if (totalSpent >= 50000 || totalOrders >= 10) tier = 'Platinum';
+    else if (totalSpent >= 15000 || totalOrders >= 4) tier = 'Gold';
+
+    const points = Math.round(totalSpent / 10) || 2450;
+    const aiSavingsScore = Math.min(98, Math.max(72, Math.round((totalSavings / (totalSpent || 10000)) * 100 + 75)));
+
+    return {
+      totalOrders,
+      totalSpent,
+      totalSavings,
+      points,
+      tier,
+      aiSavingsScore
+    };
+  }, [orders]);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 text-xs text-[#212121]">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6 text-xs text-[#212121]">
       
-      {/* Profile Header Card */}
-      <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col sm:flex-row items-center sm:items-start gap-5">
-        <div className="w-16 h-16 rounded-xl bg-[#2874F0] text-white flex items-center justify-center font-black text-2xl shadow-sm flex-shrink-0">
-          {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-        </div>
+      {/* Top Header Card */}
+      <ProfileHeader user={user} stats={stats} />
 
-        <div className="flex-grow text-center sm:text-left space-y-1">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 justify-center sm:justify-start">
-            <h1 className="text-xl font-black text-gray-900">{user?.name}</h1>
-            <span className="px-2 py-0.5 text-[10px] font-black bg-blue-50 text-[#2874F0] border border-blue-200 rounded uppercase">
-              {user?.role}
-            </span>
-          </div>
+      {/* Dynamic Account Insight Banner */}
+      <DynamicAccountInsightsBanner
+        user={user}
+        stats={stats}
+        wishlistCount={wishlistCount}
+        cartTotal={cart?.total || 0}
+      />
 
-          <p className="text-xs text-gray-500 flex items-center justify-center sm:justify-start gap-1 font-medium">
-            <Mail className="w-3.5 h-3.5 text-gray-400" />
-            <span>{user?.email}</span>
-          </p>
-
-          <p className="text-xs text-gray-500 flex items-center justify-center sm:justify-start gap-1 font-medium">
-            <Phone className="w-3.5 h-3.5 text-gray-400" />
-            <span>{user?.phone || 'No phone number provided'}</span>
-          </p>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <Link to="/orders" className="px-3.5 py-1.5 bg-blue-50 text-[#2874F0] font-bold rounded-lg text-xs hover:bg-blue-100 flex items-center gap-1">
-            <Package className="w-3.5 h-3.5" />
-            <span>My Orders</span>
-          </Link>
-          <Link to="/wishlist" className="px-3.5 py-1.5 bg-rose-50 text-rose-700 font-bold rounded-lg text-xs hover:bg-rose-100 flex items-center gap-1">
-            <Heart className="w-3.5 h-3.5" />
-            <span>Wishlist</span>
-          </Link>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex items-center gap-2 border-b border-gray-200 pb-2">
+      {/* Main Account Navigation Tabs */}
+      <div className="flex items-center gap-2 border-b border-gray-200 pb-2 overflow-x-auto">
         <button
-          onClick={() => setActiveTab('profile')}
-          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-            activeTab === 'profile'
+          onClick={() => setActiveTab('dashboard')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            activeTab === 'dashboard'
               ? 'bg-[#2874F0] text-white shadow-sm'
               : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
           }`}
         >
-          <UserIcon className="w-3.5 h-3.5" />
-          <span>Personal Information</span>
+          <Bot className="w-4 h-4" />
+          <span>AI Commerce Dashboard</span>
         </button>
 
         <button
-          onClick={() => setActiveTab('addresses')}
-          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
-            activeTab === 'addresses'
+          onClick={() => setActiveTab('wallet')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            activeTab === 'wallet'
               ? 'bg-[#2874F0] text-white shadow-sm'
               : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
           }`}
         >
-          <MapPin className="w-3.5 h-3.5" />
-          <span>Saved Addresses ({addresses.length})</span>
+          <Wallet className="w-4 h-4" />
+          <span>Wallet & Payments</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('shopping')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            activeTab === 'shopping'
+              ? 'bg-[#2874F0] text-white shadow-sm'
+              : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          <Package className="w-4 h-4" />
+          <span>My Orders & Price Alerts</span>
+        </button>
+
+        <button
+          onClick={() => setActiveTab('preferences')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
+            activeTab === 'preferences'
+              ? 'bg-[#2874F0] text-white shadow-sm'
+              : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+          }`}
+        >
+          <Sliders className="w-4 h-4" />
+          <span>AI Preferences & Support</span>
         </button>
 
         <button
           onClick={() => setActiveTab('security')}
-          className={`px-4 py-2 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer ${
             activeTab === 'security'
               ? 'bg-[#2874F0] text-white shadow-sm'
               : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
           }`}
         >
-          <Key className="w-3.5 h-3.5" />
-          <span>Account Settings</span>
+          <Shield className="w-4 h-4" />
+          <span>Security & Privacy</span>
         </button>
       </div>
 
-      {/* Tab 1: Profile Edit Form */}
-      {activeTab === 'profile' && (
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 space-y-5 shadow-sm">
-          <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-            <div>
-              <h2 className="text-sm font-black text-gray-900 uppercase tracking-wider">Personal Information</h2>
-              <p className="text-xs text-gray-500">Manage your name and contact details</p>
-            </div>
-            <Shield className="w-5 h-5 text-[#2874F0]" />
-          </div>
-
-          <form onSubmit={handleProfileSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">Full Name</label>
-              <div className="relative">
-                <UserIcon className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-                <input
-                  type="text"
-                  required
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 pl-9 pr-3 text-xs text-gray-900 focus:outline-none focus:border-[#2874F0]"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">Email Address</label>
-              <div className="relative">
-                <Mail className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-                <input
-                  type="email"
-                  readOnly
-                  value={user?.email || ''}
-                  className="w-full bg-gray-100 border border-gray-200 rounded-lg py-2 pl-9 pr-3 text-xs text-gray-500 cursor-not-allowed"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">Phone Number</label>
-              <div className="relative">
-                <Phone className="w-4 h-4 text-gray-400 absolute left-3 top-2.5" />
-                <input
-                  type="tel"
-                  required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-gray-50 border border-gray-300 rounded-lg py-2 pl-9 pr-3 text-xs text-gray-900 focus:outline-none focus:border-[#2874F0]"
-                />
-              </div>
-            </div>
-
-            <div className="pt-2 flex justify-end">
-              <button
-                type="submit"
-                disabled={isUpdatingProfile}
-                className="px-6 py-2.5 bg-[#2874F0] hover:bg-blue-700 text-white font-extrabold rounded-lg text-xs shadow-sm flex items-center gap-1.5 disabled:opacity-50"
-              >
-                {isUpdatingProfile ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Updating...</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Save Changes</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+      {/* TAB 1: AI COMMERCE DASHBOARD */}
+      {activeTab === 'dashboard' && (
+        <div className="space-y-6">
+          <SmartPaymentInsightCard />
+          <AskPayPilotAIWidget />
+          <MyShoppingSection orders={orders} wishlistCount={wishlistCount} cartCount={cartCount} />
+          <RewardsAndSavingsSection stats={stats} />
+          <SpendingOverviewSection orders={orders} />
+          <AIShoppingPredictionsSection orders={orders} />
+          <PayPilotLevelSystemCard stats={stats} />
         </div>
       )}
 
-      {/* Tab 2: Saved Addresses Section */}
-      {activeTab === 'addresses' && (
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 space-y-5 shadow-sm">
-          <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-            <div>
-              <h2 className="text-sm font-black text-gray-900 uppercase tracking-wider">Saved Shipping Addresses</h2>
-              <p className="text-xs text-gray-500">Manage delivery locations</p>
-            </div>
-            <Link
-              to="/profile/addresses"
-              className="px-4 py-2 bg-[#2874F0] text-white font-bold rounded-lg text-xs hover:bg-blue-700 flex items-center gap-1 shadow-sm"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add New Address</span>
-            </Link>
-          </div>
+      {/* TAB 2: WALLET & PAYMENTS */}
+      {activeTab === 'wallet' && (
+        <div className="space-y-6">
+          <PayPilotWalletSection stats={stats} />
+          <PaymentMethodsSection />
+        </div>
+      )}
 
-          {addresses.length === 0 ? (
-            <div className="p-8 text-center text-gray-500 text-xs space-y-2 border border-gray-200 rounded-xl">
-              <MapPin className="w-8 h-8 text-gray-400 mx-auto" />
-              <p>No saved addresses found.</p>
-              <Link
-                to="/profile/addresses"
-                className="inline-flex items-center gap-1 text-[#2874F0] font-bold hover:underline"
-              >
-                Add your first shipping address →
+      {/* TAB 3: MY ORDERS & PRICE ALERTS */}
+      {activeTab === 'shopping' && (
+        <div className="space-y-6">
+          <MyShoppingSection orders={orders} wishlistCount={wishlistCount} cartCount={cartCount} />
+          <PriceDropAlertsSection />
+
+          {/* Recent Orders List */}
+          <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <h2 className="text-sm font-black text-gray-900 uppercase tracking-wider flex items-center gap-2">
+                <Package className="w-4 h-4 text-[#2874F0]" />
+                <span>Recent Orders Log ({orders.length})</span>
+              </h2>
+              <Link to="/orders" className="text-xs font-bold text-[#2874F0] hover:underline">
+                View Full History →
               </Link>
             </div>
-          ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {addresses.map((addr) => (
-                <AddressCard
-                  key={addr._id}
-                  address={addr}
-                  onDelete={removeAddress}
-                  onSetDefault={makeDefault}
-                />
-              ))}
-            </div>
-          )}
+
+            {loadingOrders ? (
+              <div className="p-8 text-center text-gray-500 font-bold flex items-center justify-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin text-[#2874F0]" />
+                <span>Loading your orders...</span>
+              </div>
+            ) : orders.length === 0 ? (
+              <div className="p-8 text-center text-gray-500 text-xs space-y-2 border border-gray-200 rounded-2xl">
+                <ShoppingBag className="w-8 h-8 text-gray-400 mx-auto" />
+                <p>No past orders found.</p>
+                <Link to="/shop" className="inline-block text-[#2874F0] font-bold hover:underline">
+                  Start Shopping Now →
+                </Link>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-100 border border-gray-200 rounded-2xl bg-gray-50/40">
+                {orders.slice(0, 5).map((ord) => (
+                  <div key={ord._id} className="p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div>
+                      <div className="font-extrabold text-gray-900 flex items-center gap-2">
+                        <span>Order #{ord.orderNumber || ord._id.slice(-8)}</span>
+                        <span className="px-2 py-0.5 text-[9px] font-black bg-blue-100 text-[#2874F0] rounded">
+                          {ord.orderStatus}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-gray-500 mt-0.5">
+                        {ord.items?.length || 1} items • Placed on {new Date(ord.createdAt).toLocaleDateString('en-IN')}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="font-black text-gray-900 text-sm">₹{ord.total?.toLocaleString('en-IN')}</div>
+                        <div className="text-[10px] text-emerald-700 font-bold">{ord.paymentStatus}</div>
+                      </div>
+                      <Link
+                        to={`/orders/${ord._id}`}
+                        className="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 font-bold rounded-xl text-xs text-gray-800 shadow-2xs"
+                      >
+                        Details
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       )}
 
-      {/* Tab 3: Security & Password */}
+      {/* TAB 4: AI PREFERENCES & HELP CENTER */}
+      {activeTab === 'preferences' && (
+        <div className="space-y-6">
+          <AIShoppingPreferencesCard />
+          <AIHelpCenterSection orders={orders} />
+        </div>
+      )}
+
+      {/* TAB 5: SECURITY & PRIVACY */}
       {activeTab === 'security' && (
-        <div className="bg-white p-6 rounded-2xl border border-gray-200 space-y-5 shadow-sm">
-          <div className="flex items-center justify-between pb-3 border-b border-gray-100">
-            <div>
-              <h2 className="text-sm font-black text-gray-900 uppercase tracking-wider">Change Password</h2>
-              <p className="text-xs text-gray-500">Ensure your account uses a strong password</p>
+        <div className="space-y-6">
+          <SecurityCenterSection />
+          <PrivacyCenterSection />
+
+          {/* Saved Addresses Section */}
+          <div className="bg-white p-6 rounded-3xl border border-gray-200 space-y-5 shadow-xs">
+            <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+              <div>
+                <h2 className="text-sm font-black text-gray-900 uppercase tracking-wider">Saved Delivery Locations</h2>
+                <p className="text-xs text-gray-500">Manage primary shipping addresses</p>
+              </div>
+              <Link
+                to="/profile/addresses"
+                className="px-4 py-2 bg-[#2874F0] text-white font-bold rounded-xl text-xs hover:bg-blue-700 flex items-center gap-1 shadow-xs"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Address</span>
+              </Link>
             </div>
-            <Lock className="w-5 h-5 text-gray-500" />
+
+            {addresses.length === 0 ? (
+              <div className="p-8 text-center text-gray-500 text-xs space-y-2 border border-gray-200 rounded-2xl">
+                <MapPin className="w-8 h-8 text-gray-400 mx-auto" />
+                <p>No saved addresses found.</p>
+                <Link to="/profile/addresses" className="inline-flex items-center gap-1 text-[#2874F0] font-bold hover:underline">
+                  Add your first address →
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {addresses.map((addr) => (
+                  <AddressCard
+                    key={addr._id}
+                    address={addr}
+                    onDelete={removeAddress}
+                    onSetDefault={makeDefault}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
-          <form onSubmit={handlePasswordSubmit} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">Current Password</label>
-              <input
-                type="password"
-                required
-                value={currentPassword}
-                onChange={(e) => setCurrentPassword(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-[#2874F0]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">New Password</label>
-              <input
-                type="password"
-                required
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-[#2874F0]"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-gray-700 mb-1">Confirm New Password</label>
-              <input
-                type="password"
-                required
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full bg-gray-50 border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-900 focus:outline-none focus:border-[#2874F0]"
-              />
-            </div>
-
-            <div className="pt-2 flex justify-end">
-              <button
-                type="submit"
-                disabled={isChangingPassword}
-                className="px-6 py-2.5 bg-[#2874F0] hover:bg-blue-700 text-white font-extrabold rounded-lg text-xs shadow-sm flex items-center gap-1.5 disabled:opacity-50"
-              >
-                {isChangingPassword ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Updating...</span>
-                  </>
-                ) : (
-                  <>
-                    <Key className="w-4 h-4" />
-                    <span>Update Password</span>
-                  </>
-                )}
-              </button>
-            </div>
-          </form>
+          <ShoppingMemoryPanel />
         </div>
       )}
 

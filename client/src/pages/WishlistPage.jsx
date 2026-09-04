@@ -2,7 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { useWishlist } from '../hooks/useWishlist';
 import { ProductCard } from '../components/ProductCard';
-import { Heart, ShoppingBag, ArrowRight } from 'lucide-react';
+import { ExplainableRecommendationCard } from '../components/ExplainableRecommendationCard';
+import { Heart, ShoppingBag, ArrowRight, Zap, TrendingDown } from 'lucide-react';
 
 export const WishlistPage = () => {
   const { wishlist, wishlistCount, isLoading } = useWishlist();
@@ -72,15 +73,21 @@ export const WishlistPage = () => {
           </div>
         ) : (
           
-          /* WISHLIST PRODUCTS GRID */
+          /* WISHLIST PRODUCTS GRID WITH AI TRACKING */
           <div className="space-y-4">
-            <div className="text-xs font-bold text-[#5F6B76] uppercase tracking-wider">
-              Saved Products ({wishlistCount})
+            <div className="flex items-center justify-between">
+              <div className="text-xs font-bold text-[#5F6B76] uppercase tracking-wider">
+                Saved Products ({wishlistCount})
+              </div>
+              <div className="text-[11px] text-emerald-700 font-extrabold flex items-center gap-1 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">
+                <Zap className="w-3 h-3 text-emerald-600" />
+                <span>AI Price Drop & Stock Tracking Active</span>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
               {products.map((product) => (
-                <ProductCard key={product._id} product={product} />
+                <ExplainableRecommendationCard key={product._id} product={product} />
               ))}
             </div>
           </div>

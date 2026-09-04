@@ -4,7 +4,8 @@ import {
   createOrder,
   getUserOrders,
   getOrderById,
-  cancelOrder
+  cancelOrder,
+  requestReturnOrder
 } from '../controllers/orderController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
@@ -17,5 +18,6 @@ router.post('/', createOrder);
 router.get('/', getUserOrders);
 router.get('/:id', getOrderById);
 router.patch('/:id/cancel', cancelOrder);
+router.post('/:id/return', requestReturnOrder);
 
 export default router;

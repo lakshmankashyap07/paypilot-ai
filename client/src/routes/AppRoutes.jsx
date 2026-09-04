@@ -18,12 +18,18 @@ import { OrderSuccessPage } from '../pages/OrderSuccessPage';
 import { OrderHistoryPage } from '../pages/OrderHistoryPage';
 import { OrderDetailsPage } from '../pages/OrderDetailsPage';
 import { AIShopPage } from '../pages/AIShopPage';
+import { ComparePage } from '../pages/ComparePage';
 import { MerchantPage } from '../pages/MerchantPage';
 import { GrowthCopilotPage } from '../pages/GrowthCopilotPage';
 import { MerchantCampaignsPage } from '../pages/MerchantCampaignsPage';
 import { PaymentPage } from '../pages/PaymentPage';
 import { PaymentSuccessPage } from '../pages/PaymentSuccessPage';
 import { PaymentFailedPage } from '../pages/PaymentFailedPage';
+import { PrivacyPolicyPage } from '../pages/PrivacyPolicyPage';
+import { TermsOfServicePage } from '../pages/TermsOfServicePage';
+import { RefundPolicyPage } from '../pages/RefundPolicyPage';
+import { ShippingPolicyPage } from '../pages/ShippingPolicyPage';
+import { CancellationPolicyPage } from '../pages/CancellationPolicyPage';
 import { AdminLayout } from '../pages/admin/AdminLayout';
 import { AdminDashboardPage } from '../pages/admin/AdminDashboardPage';
 import { AdminUsersPage } from '../pages/admin/AdminUsersPage';
@@ -47,8 +53,14 @@ export const AppRoutes = () => {
         <Route path="shop" element={<ShopPage />} />
         <Route path="product/:id" element={<ProductDetailsPage />} />
         <Route path="ai-shop" element={<AIShopPage />} />
+        <Route path="compare" element={<ComparePage />} />
         <Route path="wishlist" element={<WishlistPage />} />
         <Route path="cart" element={<CartPage />} />
+        <Route path="privacy-policy" element={<PrivacyPolicyPage />} />
+        <Route path="terms-of-service" element={<TermsOfServicePage />} />
+        <Route path="refund-policy" element={<RefundPolicyPage />} />
+        <Route path="shipping-policy" element={<ShippingPolicyPage />} />
+        <Route path="cancellation-policy" element={<CancellationPolicyPage />} />
 
         {/* Protected Customer Routes */}
         <Route

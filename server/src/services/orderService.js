@@ -235,6 +235,42 @@ export const orderService = {
     }
 
     return order;
+  },
+
+  /**
+   * Return / Replacement Request Validation & Execution
+   */
+  async requestReturnOrder(userId, orderId, { productId, issueCategory, reasonDetails } = {}) {
+    const order = await Order.findById(orderId);
+    if (!order) {
+      throw new Error('Order not found');
+    }
+
+    if (order.user.toString() !== userId.toString()) {
+      throw new Error('Forbidden: You can only request returns for your own orders');
+    }
+
+    const normStatus = (order.orderStatus || '').toUpperCase();
+
+    if (normStatus !== 'DELIVERED') {
+      throw new Error('Return or replacement is only available after the order has been delivered.');
+    }
+
+    if (normStatus === 'RETURNED' || normStatus === 'REPLACED' || normStatus === 'RETURN_REQUESTED') {
+      throw new Error('A return or replacement request has already been submitted for this order.');
+    }
+
+    const deliveryDate = order.deliveredAt || order.updatedAt || order.createdAt;
+    const diffDays = (Date.now() - new Date(deliveryDate).getTime()) / (1000 * 60 * 60 * 24);
+
+    if (diffDays > 7) {
+      throw new Error('Return window has expired. Returns must be requested within 7 days of delivery.');
+    }
+
+    order.orderStatus = 'RETURN_REQUESTED';
+    await order.save();
+
+    return order;
   }
 };
 

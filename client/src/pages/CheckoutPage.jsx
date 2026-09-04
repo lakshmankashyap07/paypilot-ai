@@ -10,6 +10,7 @@ import { CartSummary } from '../components/CartSummary';
 import { ShoppingBag, ArrowLeft, MapPin, ShieldCheck, User, CheckCircle2 } from 'lucide-react';
 
 import { getImageUrl } from '../utils/imageUtils';
+import { AICheckoutAssistantBanner } from '../components/AICheckoutAssistantBanner';
 
 export const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -120,6 +121,9 @@ export const CheckoutPage = () => {
           </p>
         </div>
       </div>
+
+      {/* AI CHECKOUT ASSISTANT BANNER */}
+      <AICheckoutAssistantBanner userBudget={30000} />
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">

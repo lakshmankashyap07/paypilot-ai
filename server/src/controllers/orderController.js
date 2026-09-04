@@ -109,3 +109,30 @@ export const cancelOrder = async (req, res, next) => {
     });
   }
 };
+
+/**
+ * Request Return/Replacement for Order
+ * POST /api/orders/:id/return
+ */
+export const requestReturnOrder = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { productId, issueCategory, reasonDetails } = req.body || {};
+    const order = await orderService.requestReturnOrder(req.user._id, id, {
+      productId,
+      issueCategory,
+      reasonDetails
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Return request submitted successfully',
+      data: { order }
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      message: error.message || 'Failed to process return request'
+    });
+  }
+};

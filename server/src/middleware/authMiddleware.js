@@ -79,3 +79,29 @@ export const authorizeRoles = (...roles) => {
     next();
   };
 };
+
+/**
+ * Optional Authentication Middleware
+ * Attaches user object if valid token exists, but proceeds regardless.
+ */
+export const optionalAuth = async (req, res, next) => {
+  let token;
+  if (req.cookies && req.cookies.token) {
+    token = req.cookies.token;
+  } else if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    token = req.headers.authorization.split(' ')[1];
+  }
+
+  if (token) {
+    try {
+      const decoded = verifyToken(token);
+      const user = await User.findById(decoded.id).select('-password');
+      if (user && user.isActive) {
+        req.user = user;
+      }
+    } catch (error) {
+      // Token invalid or expired - proceed as unauthenticated
+    }
+  }
+  next();
+};

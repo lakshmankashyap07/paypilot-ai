@@ -9,9 +9,18 @@ const ALLOWED_TRANSITIONS = {
   PENDING: ['CONFIRMED', 'CANCELLED'],
   CONFIRMED: ['PROCESSING', 'CANCELLED'],
   PROCESSING: ['SHIPPED', 'CANCELLED'],
-  SHIPPED: ['OUT_FOR_DELIVERY'],
+  SHIPPED: ['OUT_FOR_DELIVERY', 'DELIVERED'],
   OUT_FOR_DELIVERY: ['DELIVERED'],
-  DELIVERED: [],
+  DELIVERED: ['RETURN_REQUESTED', 'REPLACEMENT_REQUESTED'],
+  RETURN_REQUESTED: ['RETURN_APPROVED', 'RETURN_REJECTED'],
+  RETURN_APPROVED: ['RETURN_PICKUP_SCHEDULED', 'RETURNED'],
+  RETURN_PICKUP_SCHEDULED: ['RETURNED'],
+  RETURN_REJECTED: [],
+  RETURNED: [],
+  REPLACEMENT_REQUESTED: ['REPLACEMENT_APPROVED', 'REPLACEMENT_REJECTED'],
+  REPLACEMENT_APPROVED: ['SHIPPED', 'REPLACED'],
+  REPLACEMENT_REJECTED: [],
+  REPLACED: [],
   CANCELLED: []
 };
 
@@ -183,18 +192,60 @@ export const merchantService = {
    * Create Product assigned to Merchant
    */
   async createProduct(merchantId, productData) {
-    if (!productData.name || productData.price === undefined || !productData.category) {
-      throw new Error('Name, price, and category are required');
+    const {
+      name,
+      description,
+      category,
+      subcategory = '',
+      brand,
+      price,
+      originalPrice,
+      stock = 0,
+      sku,
+      thumbnail = '',
+      images = [],
+      featured = false,
+      active = true
+    } = productData;
+
+    if (!name || price === undefined || price === '' || !category || !brand || !description) {
+      throw new Error('Name, brand, category, price, and description are required fields');
     }
 
-    const slug = productData.slug ? productData.slug : await generateUniqueSlug(productData.name);
-    const sku = productData.sku || `SKU-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
+    const numericPrice = Number(price);
+    if (isNaN(numericPrice) || numericPrice < 0) {
+      throw new Error('Price must be a valid non-negative number');
+    }
+
+    const numericStock = Number(stock);
+    if (isNaN(numericStock) || numericStock < 0) {
+      throw new Error('Stock must be a valid non-negative number');
+    }
+
+    const generatedSlug = productData.slug && productData.slug.trim() !== ''
+      ? productData.slug.trim()
+      : await generateUniqueSlug(name);
+
+    const generatedSku = sku && sku.trim() !== ''
+      ? sku.trim().toUpperCase()
+      : `SKU-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
 
     const product = await Product.create({
-      ...productData,
-      slug,
-      sku,
-      merchant: merchantId
+      merchant: merchantId,
+      name: name.trim(),
+      slug: generatedSlug,
+      description: description.trim(),
+      category: category.trim(),
+      subcategory: subcategory ? subcategory.trim() : '',
+      brand: brand.trim(),
+      price: numericPrice,
+      originalPrice: originalPrice ? Number(originalPrice) : numericPrice,
+      stock: numericStock,
+      sku: generatedSku,
+      thumbnail: thumbnail ? thumbnail.trim() : '',
+      images: Array.isArray(images) && images.length > 0 ? images : (thumbnail ? [thumbnail.trim()] : []),
+      featured: Boolean(featured),
+      active: active !== undefined ? Boolean(active) : true
     });
 
     return product;
@@ -206,8 +257,12 @@ export const merchantService = {
   async updateProduct(merchantId, productId, role = 'MERCHANT', updateData) {
     const filter = role === 'ADMIN' ? { _id: productId } : { _id: productId, merchant: merchantId };
 
-    if (updateData.name && !updateData.slug) {
+    if (updateData.name && (!updateData.slug || updateData.slug.trim() === '')) {
       updateData.slug = await generateUniqueSlug(updateData.name, productId);
+    }
+
+    if (updateData.sku) {
+      updateData.sku = updateData.sku.trim().toUpperCase();
     }
 
     const product = await Product.findOneAndUpdate(filter, { $set: updateData }, { new: true, runValidators: true });

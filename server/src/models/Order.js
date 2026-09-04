@@ -122,11 +122,34 @@ const orderSchema = new mongoose.Schema(
         'PROCESSING',
         'SHIPPED',
         'OUT_FOR_DELIVERY',
+        'IN_TRANSIT',
         'DELIVERED',
-        'CANCELLED'
+        'CANCELLED',
+        'RETURN_REQUESTED',
+        'RETURN_APPROVED',
+        'RETURN_REJECTED',
+        'RETURN_PICKUP_SCHEDULED',
+        'RETURNED',
+        'REPLACEMENT_REQUESTED',
+        'REPLACEMENT_APPROVED',
+        'REPLACEMENT_REJECTED',
+        'REPLACED'
       ],
       default: 'PENDING',
       index: true
+    },
+    returnDetails: {
+      returnType: { type: String, enum: ['RETURN', 'REPLACEMENT', 'NONE'], default: 'NONE' },
+      returnStatus: { type: String, default: 'NONE' },
+      issueCategory: { type: String, default: '' },
+      reasonDetails: { type: String, default: '' },
+      requestedAt: { type: Date, default: null },
+      approvedAt: { type: Date, default: null },
+      ticketId: { type: String, default: '' }
+    },
+    deliveredAt: {
+      type: Date,
+      default: null
     },
     paidAt: {
       type: Date,

@@ -21,6 +21,11 @@ import {
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { ProductCard } from '../components/ProductCard';
+import { PersonalizedForYouSection } from '../components/PersonalizedForYouSection';
+import { VoiceSearchButton } from '../components/VoiceSearchButton';
+import { Search, Loader2 } from 'lucide-react';
+import aiIntelligenceService from '../services/aiIntelligenceService';
+import { useNavigate } from 'react-router-dom';
 
 export const LandingPage = () => {
   const { isAuthenticated, user } = useAuth();
@@ -71,6 +76,35 @@ export const LandingPage = () => {
               India's intelligent marketplace. Autonomous AI shopping copilots that compare ratings, track prices, and find the perfect product for you.
             </p>
 
+            {/* AI NATURAL LANGUAGE SEARCH BAR */}
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                const text = e.target.searchQuery.value;
+                if (text) navigate(`/shop?search=${encodeURIComponent(text)}`);
+              }}
+              className="pt-2 flex items-center gap-2 max-w-xl"
+            >
+              <div className="relative flex-grow">
+                <Search className="w-4 h-4 text-gray-400 absolute left-3.5 top-3" />
+                <input
+                  type="text"
+                  name="searchQuery"
+                  placeholder="e.g. best laptop for coding under 50,000"
+                  className="w-full bg-white text-gray-900 placeholder-gray-400 rounded-xl pl-10 pr-4 py-2.5 text-xs font-medium focus:outline-none shadow-md border-2 border-transparent focus:border-[#FFCA28]"
+                />
+              </div>
+              <VoiceSearchButton
+                onTranscript={(text) => navigate(`/shop?search=${encodeURIComponent(text)}`)}
+              />
+              <button
+                type="submit"
+                className="px-5 py-2.5 bg-[#FF9F00] hover:bg-amber-600 text-white font-extrabold rounded-xl text-xs shadow-md transition-all flex-shrink-0 cursor-pointer"
+              >
+                AI Search
+              </button>
+            </form>
+
             <div className="pt-2 flex flex-wrap items-center justify-center md:justify-start gap-4">
               <Link
                 to="/shop"
@@ -110,6 +144,11 @@ export const LandingPage = () => {
           </div>
 
         </div>
+      </section>
+
+      {/* 2. PERSONALIZED AI FOR YOU FEED */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <PersonalizedForYouSection />
       </section>
 
       {/* 2. CATEGORY SHORTCUTS */}

@@ -128,6 +128,14 @@ export const preferenceService = {
     }
 
     return products;
+  },
+
+  /**
+   * Reset / Clear User Preferences
+   */
+  async clearUserPreferences(userId) {
+    if (!userId) return;
+    await UserPreference.deleteMany({ user: userId });
   }
 };
 

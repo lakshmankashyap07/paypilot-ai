@@ -128,6 +128,7 @@ export const createProduct = async (req, res, next) => {
       data: { product }
     });
   } catch (error) {
+    console.error('Create Product Error:', error);
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to create product'
@@ -154,6 +155,7 @@ export const updateProduct = async (req, res, next) => {
       data: { product }
     });
   } catch (error) {
+    console.error('Update Product Error:', error);
     res.status(400).json({
       success: false,
       message: error.message || 'Failed to update product'
